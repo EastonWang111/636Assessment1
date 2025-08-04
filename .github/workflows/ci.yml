@@ -5,7 +5,6 @@ on:
     branches:
       - main  # Trigger CI on pushes to the main branch
 
-
 jobs:
   test:
     name: Run Tests
@@ -14,7 +13,6 @@ jobs:
     strategy:
       matrix:
         node-version: [22] # Test on multiple Node.js versions
-
 
     environment: MONGO_URI
 
@@ -28,40 +26,45 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    # 打印环境变量（调试用，可删）
     - name: Print Env Secret
-
       env:
         MONGO_URI: ${{ secrets.MONGO_URI }}
         JWT_SECRET: ${{ secrets.JWT_SECRET }}
         PORT: ${{ secrets.PORT }}
       run: | 
-        echo "Secret 1 is: $MONGO_URI"
-        echo "Secret 2 is: $JWT_SECRET"
-        echo "Secret 3 is: $PORT"
-      
+        echo "MONGO_URI is: $MONGO_URI"
+        echo "JWT_SECRET is: $JWT_SECRET"
+        echo "PORT is: $PORT"
+
+    # 停止已有 PM2 进程（忽略失败）
     - name: Run pm2 stop all
       run: pm2 stop all || true
 
-
-    # Install dependencies for backend
+    # 安装 Backend 依赖
     - name: Install Backend Dependencies
       working-directory: ./backend
       run: | 
-       npm install --global yarn
-       yarn --version
-       yarn install
-      
-    # Install dependencies for frontend
+        npm install --global yarn
+        yarn install
+
+    # 安装 Frontend 依赖并构建
     - name: Install Frontend Dependencies
       working-directory: ./frontend
       run: |
-        df -h
         sudo rm -rf ./build
         yarn install
         yarn run build
 
+    # 创建 .env 文件
+    - name: Create .env file
+      working-directory: ./backend
+      run: |
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "PORT=${{ secrets.PORT }}" >> .env
 
-    # Run backend tests
+    # 运行 Backend 测试
     - name: Run Backend Tests
       env:
         MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -70,13 +73,11 @@ jobs:
       working-directory: ./backend
       run: npm test
 
+    # 启动 Backend
+    - name: Start backend with PM2
+      run: |
+        cd backend
+        pm2 start server.js --name backend || true
 
-    - run: npm ci
-    - run: | 
-        cd ./backend
-        touch .env
-        echo "${{ secrets.PROD }}" > .env
-
-    - run: pm2 start all
-
-    - run: pm2 restart all
+    # 重启 PM2（可选）
+    - run: pm2 restart all || true
