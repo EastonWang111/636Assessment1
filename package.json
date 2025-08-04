@@ -13,5 +13,9 @@
     "mocha": "^11.0.1"
   },
   "author": "Task Manager Team",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "mongodb": "^6.18.0"
+  }
 }
