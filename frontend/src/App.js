@@ -4,7 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
-import Votes from './pages/Votes'; 
+import Votes from './pages/Votes';
 import {useAuth} from './context/AuthContext';
 
 function App() {
@@ -19,7 +19,9 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/votes" element={<Votes />} />
-        <Route path="/" element={ user ? <Navigate to="/task" replace /> : <Navigate to="/login" replace />} />
+        <Route path="/" element={
+          user ? <Navigate to="/tasks" replace /> : <Navigate to="/login" replace />
+        } />
       </Routes>
     </Router>
   );

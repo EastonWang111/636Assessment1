@@ -26,11 +26,11 @@ const adminOnly = async (req, res, next) => {
         if (!req.user){
             return res.status(401).json({ message: 'please login! '});
         }
-
-        if (res.user.role !== 'admin'){
+        
+        if (req.user.role !== 'admin'){
             return res.status(403).json({ message: 'Only administrators can run this function'});
         }
-
+        
         next();
 
     } catch(error){
@@ -38,4 +38,4 @@ const adminOnly = async (req, res, next) => {
     }
 };
 
-module.exports = { protect ,adminOnly };
+module.exports = { protect, adminOnly };
