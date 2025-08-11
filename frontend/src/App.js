@@ -4,7 +4,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
-import {useAuth} from './contect/AuthCOntext';
+import {useAuth} from './context/AuthContext';
 
 function App() {
   const { user } = useAuth();
