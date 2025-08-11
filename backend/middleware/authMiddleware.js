@@ -19,23 +19,22 @@ const protect = async (req, res, next) => {
     if (!token) {
         res.status(401).json({ message: 'Not authorized, no token' });
     }
-
+};
     // check Administrator account
-    const adminOnly = async (req, res, next) => {
-        try{
-            if (!req.user){
-                return res.status(401).json({ message: 'please login! '});
-            }
-
-            if (res.user.role !== 'admin'){
-                return res.status(403).json({ message: 'Only administrators can run this function'})
-            }
-
-            next();
-
-        } catch(error){
-            res.status(500).json({ message: error.message});
+const adminOnly = async (req, res, next) => {
+    try{
+        if (!req.user){
+            return res.status(401).json({ message: 'please login! '});
         }
+
+        if (res.user.role !== 'admin'){
+            return res.status(403).json({ message: 'Only administrators can run this function'});
+        }
+
+        next();
+
+    } catch(error){
+        res.status(500).json({ message: error.message});
     }
 };
 
