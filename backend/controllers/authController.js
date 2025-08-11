@@ -42,10 +42,12 @@ const getProfile = async (req, res) => {
       }
   
       res.status(200).json({
+        _id: user._id,
         name: user.name,
         email: user.email,
         university: user.university,
         address: user.address,
+        role: user.role,
       });
     } catch (error) {
       res.status(500).json({ message: 'Server error', error: error.message });
