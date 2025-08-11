@@ -9,9 +9,9 @@ const TaskForm = ({ tasks, setTasks, editingTask, setEditingTask }) => {
   useEffect(() => {
     if (editingTask) {
       setFormData({
-        title: editingTask.title,
-        description: editingTask.description,
-        deadline: editingTask.deadline,
+        title: editingTask.title || '',
+        description: editingTask.description || '',
+        deadline: editingTask.deadline ||' ',
       });
     } else {
       setFormData({ title: '', description: '', deadline: '' });
@@ -45,20 +45,21 @@ const TaskForm = ({ tasks, setTasks, editingTask, setEditingTask }) => {
       <input
         type="text"
         placeholder="Title"
-        value={formData.title}
+        value={formData.title || ''}
         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         className="w-full mb-4 p-2 border rounded"
+        required
       />
       <input
         type="text"
         placeholder="Description"
-        value={formData.description}
+        value={formData.description || ''}
         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
         className="w-full mb-4 p-2 border rounded"
       />
       <input
         type="date"
-        value={formData.deadline}
+        value={formData.deadline || ''}
         onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
         className="w-full mb-4 p-2 border rounded"
       />
