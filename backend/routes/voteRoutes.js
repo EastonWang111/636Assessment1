@@ -1,4 +1,5 @@
 const express = require('express');
+const router = express.Router();   
 const {
     createVote,
     getVotes,
@@ -10,7 +11,6 @@ const {
 } = require('../controllers/voteController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
-const router = express.Router();
 
 //All routes require authentication
 router.use(protect);
