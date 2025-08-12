@@ -25,6 +25,7 @@
 
 ---
 
+
 Project Function Detail:
 
 All the account can change the profile. When making changes in the profile interface, it will ensure that the username, email, etc. are entered correctly. For the user account, they can voting and see the result. For the admin account, they can create, delete, close vote. In the create vote page, admin can write title name, write vote description, create option, add option. When the option voting options more than 2, admin can delete option. The user management interface has not been completed yet, so for now, you can only use the pre-created administrator account. When creating a user, the default role of the account is "user".
@@ -48,3 +49,6 @@ User account:(Only voting is allowed.)
 Email: user@example.com
 
 Password: user123
+
+
+test
