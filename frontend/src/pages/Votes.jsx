@@ -50,7 +50,7 @@ const Votes = () => {
     useEffect(() => {
         fetchVotes();
         fetchUserProfile();
-    }, [fetchVotes, fetchUserProfile]); // 依赖优化后的函数
+    }, [fetchVotes, fetchUserProfile]); 
 
     const handleCreateVote = async (e) => {
         e.preventDefault();
@@ -112,10 +112,10 @@ const Votes = () => {
                     headers: { Authorization: `Bearer ${authUser.token}` }
                 });
                 
-                // 显示成功消息
+                // Display success message
                 alert('Vote deleted successfully!');
                 
-                // 重新获取投票列表
+                // Re-obtain the voting list
                 await fetchVotes();
                 setError('');
             } catch (error) {
@@ -283,7 +283,7 @@ const Votes = () => {
                                             <p className="text-gray-600 mt-2">{vote.description}</p>
                                         )}
                                         <p className="text-sm text-gray-500 mt-2">
-                                            Creator: {vote.createdBy.name} | 
+                                            Creator: {vote.createdBy?.name ?? 'Unknown user'} | 
                                             Status: <span className={vote.status === 'active' ? 'text-green-600' : 'text-red-600'}>
                                                 {vote.status === 'active' ? 'Active' : 'Closed'}
                                             </span> | 

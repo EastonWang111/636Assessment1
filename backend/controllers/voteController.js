@@ -1,14 +1,14 @@
 const Vote = require('../models/Vote');
 const User = require('../models/User');
 
-// 创建投票 (仅管理员)
+// create vote(admin only)
 const createVote = async (req, res) => {
     try {
         const { title, description, options } = req.body;
         
-        // 验证必填字段
+        // Verify mandatory fields
         if (!title || !options || options.length < 2) {
-            return res.status(400).json({ message: '标题和至少两个选项是必填的' });
+            return res.status(400).json({ message: 'The title and at least two options are mandatory' });
         }
 
         const vote = new Vote({
@@ -19,13 +19,13 @@ const createVote = async (req, res) => {
         });
 
         await vote.save();
-        res.status(201).json({ message: '投票创建成功', vote });
+        res.status(201).json({ message: 'vote create successful', vote });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// 获取所有投票
+//Obtain all votes
 const getVotes = async (req, res) => {
     try {
         const votes = await Vote.find().populate('createdBy', 'name email');
@@ -35,12 +35,12 @@ const getVotes = async (req, res) => {
     }
 };
 
-// 获取单个投票详情
+// Obtain details of a single vote
 const getVoteById = async (req, res) => {
     try {
         const vote = await Vote.findById(req.params.id).populate('createdBy', 'name email');
         if (!vote) {
-            return res.status(404).json({ message: '投票不存在' });
+            return res.status(404).json({ message: 'Voting does not exist.' });
         }
         res.json(vote);
     } catch (error) {
@@ -48,7 +48,7 @@ const getVoteById = async (req, res) => {
     }
 };
 
-// 投票
+// voting
 const castVote = async (req, res) => {
     try {
         const { optionIndex } = req.body;
@@ -57,52 +57,52 @@ const castVote = async (req, res) => {
 
         const vote = await Vote.findById(voteId);
         if (!vote) {
-            return res.status(404).json({ message: '投票不存在' });
+            return res.status(404).json({ message: 'Voting does not exist.' });
         }
 
         if (vote.status === 'closed') {
-            return res.status(400).json({ message: '投票已关闭' });
+            return res.status(400).json({ message: 'Voting has been closed.' });
         }
 
-        // 检查用户是否已经投票
+        // Check whether the user has already cast a vote
         if (vote.voters.includes(userId)) {
-            return res.status(400).json({ message: '您已经投过票了' });
+            return res.status(400).json({ message: 'You have already cast your vote' });
         }
 
-        // 检查选项索引是否有效
+        // Check whether the option index is valid
         if (optionIndex < 0 || optionIndex >= vote.options.length) {
-            return res.status(400).json({ message: '无效的选项' });
+            return res.status(400).json({ message: 'invalid option' });
         }
 
-        // 增加选项票数
+        // Increase the votes for the option
         vote.options[optionIndex].votes += 1;
         vote.voters.push(userId);
 
         await vote.save();
-        res.json({ message: '投票成功', vote });
+        res.json({ message: 'voting sueessful', vote });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// 更新投票 (仅管理员)
+// The update of the voting options has not been completed yet.
 const updateVote = async (req, res) => {
     try {
         const { title, description, options } = req.body;
         
         const vote = await Vote.findById(req.params.id);
         if (!vote) {
-            return res.status(404).json({ message: '投票不存在' });
+            return res.status(404).json({ message: 'Voting does not exist.' });
         }
 
         if (vote.status === 'closed') {
-            return res.status(400).json({ message: '已关闭的投票无法修改' });
+            return res.status(400).json({ message: 'Closed votes cannot be modified' });
         }
 
         vote.title = title || vote.title;
         vote.description = description || vote.description;
         
-        // 如果提供了新选项，更新选项（保留已有票数）
+        // If new options are provided, update the options (while retaining the existing vote counts)
         if (options && options.length > 0) {
             const newOptions = options.map((option, index) => {
                 const existingOption = vote.options[index];
@@ -115,55 +115,55 @@ const updateVote = async (req, res) => {
         }
 
         await vote.save();
-        res.json({ message: '投票更新成功', vote });
+        res.json({ message: 'update successful', vote });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// 关闭投票 (仅管理员)
+// closed vote (admin only)
 const closeVote = async (req, res) => {
     try {
         const vote = await Vote.findById(req.params.id);
         if (!vote) {
-            return res.status(404).json({ message: '投票不存在' });
+            return res.status(404).json({ message: 'Voting does not exist' });
         }
 
         if (vote.status === 'closed') {
-            return res.status(400).json({ message: '投票已经关闭' });
+            return res.status(400).json({ message: 'vote closed' });
         }
 
         vote.status = 'closed';
         vote.closedAt = new Date();
         await vote.save();
 
-        res.json({ message: '投票已关闭', vote });
+        res.json({ message: 'vote closed', vote });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// 删除投票 (仅管理员)
+// delete vote (admin only)
 const deleteVote = async (req, res) => {
     try {
         const voteId = req.params.id;
         const userId = req.user.id;
         
-        // 检查投票是否存在
+        // Check if there are any votes that need to be verified.
         const vote = await Vote.findById(voteId);
         if (!vote) {
-            return res.status(404).json({ message: '投票不存在' });
+            return res.status(404).json({ message: 'Voting does not exist.' });
         }
 
-        // 记录删除操作
-        console.log(`管理员 ${userId} 正在删除投票: ${vote.title} (ID: ${voteId})`);
+        // Record deletion operation
+        console.log(`Admin ${userId} deleting the vote: ${vote.title} (ID: ${voteId})`);
         
-        // 删除投票
+        // delete vote
         await Vote.findByIdAndDelete(voteId);
         
-        console.log(`投票删除成功: ${vote.title} (ID: ${voteId})`);
+        console.log(`delete successful: ${vote.title} (ID: ${voteId})`);
         res.json({ 
-            message: '投票已成功删除',
+            message: 'vote is delete',
             deletedVote: {
                 id: vote._id,
                 title: vote.title,
@@ -171,9 +171,9 @@ const deleteVote = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('删除投票时发生错误:', error);
+        console.error('An error occurred when deleting a vote:', error);
         res.status(500).json({ 
-            message: '删除投票失败，服务器内部错误',
+            message: 'The vote deletion failed due to an internal server error',
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
