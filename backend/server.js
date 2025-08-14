@@ -1,4 +1,7 @@
 
+// server.js 第一行（所有 import/require 之前）
+require('dotenv').config();
+
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
