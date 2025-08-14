@@ -80,9 +80,6 @@ jobs:
     name: Deploy to EC2
     runs-on: ubuntu-latest
     needs: build
-    # 可选：要求在 GitHub 环境里确认发布
-    environment:
-      name: production
 
     steps:
       - name: Download artifacts
@@ -156,5 +153,5 @@ jobs:
 
 
     # 重启 PM2（可选）
-    - run: pm2 start all
-    - run: pm2 restart all || true
+      - run: pm2 start all
+      - run: pm2 restart all || true
