@@ -38,31 +38,30 @@ jobs:
         echo "PORT is: $PORT"
 
     # 停止已有 PM2 进程（忽略失败）
-    - name: Run pm2 stop all
-      run: pm2 stop all || true
+    - run: pm2 stop all
 
     # 安装 Backend 依赖
     - name: Install Backend Dependencies
       working-directory: ./backend
       run: | 
         npm install --global yarn
+        yarn --version
         yarn install
 
     # 安装 Frontend 依赖并构建
     - name: Install Frontend Dependencies
       working-directory: ./frontend
       run: |
-        sudo rm -rf ./build
+        df-h
+        sudo rm -rf./build
         yarn install
         yarn run build
 
     # 创建 .env 文件
-    - name: Create .env file
-      working-directory: ./backend
-      run: |
-        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
-        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-        echo "PORT=${{ secrets.PORT }}" >> .env
+    - run: |
+       cd ./backend
+       touch.env
+       echo "${{secrets.PROD}}">.env
 
     # 运行 Backend 测试
     - name: Run Backend Tests
@@ -73,6 +72,8 @@ jobs:
       working-directory: ./backend
       run: npm test
 
+    - run: npm ci
+
     # 启动 Backend
     - name: Start backend with PM2
       run: |
@@ -80,4 +81,5 @@ jobs:
         pm2 start server.js --name backend || true
 
     # 重启 PM2（可选）
+    - run: pm2 start all
     - run: pm2 restart all || true
