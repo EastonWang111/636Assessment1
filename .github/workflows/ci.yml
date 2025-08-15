@@ -60,8 +60,11 @@ jobs:
     - run: npm ci
     - run: |
         cd ./backend # Navigate to backend folder
+        rm -f .env # 删除旧的 .env 文件（如果有）
         touch .env # Create an empty .env file
-        echo "${{ secrets.PROD }}" > .env
-
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "PORT=${{ secrets.PORT }}" >> .env
+  
     - run: pm2 start all
     - run: pm2 restart all
