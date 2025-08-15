@@ -1,157 +1,83 @@
-name: CI/CD
+name: Backend CI
 
 on:
   push:
-    branches: [ main ]
-
-concurrency:
-  group: cicd-${{ github.ref }}
-  cancel-in-progress: true
+    branches:
+      - main  # Trigger CI on pushes to the main branch
 
 jobs:
-  build:
-    name: Build & Test
-    runs-on: ubuntu-latest
+  test:
+    name: Run Tests
+    runs-on: self-hosted
 
     strategy:
       matrix:
-        node-version: [22]
+        node-version: [22] # Test on multiple Node.js versions
+
+    environment: MONGO_URI
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v3
 
-      # ---------- Backend ----------
-      - name: Setup Node ${{ matrix.node-version }} (backend)
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
-          cache-dependency-path: backend/package-lock.json
+    # Set up Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
 
-      - name: Install backend deps
-        working-directory: backend
-        run: npm ci
+    # 打印环境变量（调试用，可删）
+    - name: Print Env Secret
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PORT: ${{ secrets.PORT }}
+      run: | 
+        echo "MONGO_URI is: $MONGO_URI"
+        echo "JWT_SECRET is: $JWT_SECRET"
+        echo "PORT is: $PORT"
 
-      - name: Backend tests (if any)
-        working-directory: backend
-        env:
-          MONGO_URI: ${{ secrets.MONGO_URI }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          PORT: ${{ secrets.PORT }}
-        run: npm test --if-present
+    # 停止已有 PM2 进程（忽略失败）
+    - name: Run pm2 stop all
+      run: pm2 stop all || true
 
-      # 打包 backend（不包含 node_modules）
-      - name: Pack backend
-        run: |
-          tar -czf backend.tgz -C backend .
+    # 安装 Backend 依赖
+    - name: Install Backend Dependencies
+      working-directory: ./backend
+      run: | 
+        npm install --global yarn
+        yarn install
 
-      # ---------- Frontend ----------
-      - name: Setup Node ${{ matrix.node-version }} (frontend)
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+    # 安装 Frontend 依赖并构建
+    - name: Install Frontend Dependencies
+      working-directory: ./frontend
+      run: |
+        sudo rm -rf ./build
+        yarn install
+        yarn run build
 
-      - name: Install frontend deps
-        working-directory: frontend
-        run: npm ci
+    # 创建 .env 文件
+    - name: Create .env file
+      working-directory: ./backend
+      run: |
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "PORT=${{ secrets.PORT }}" >> .env
 
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
+    # 运行 Backend 测试
+    - name: Run Backend Tests
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }}
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        PORT: ${{ secrets.PORT }}
+      working-directory: ./backend
+      run: npm test
 
-      # 只打包构建产物
-      - name: Pack frontend build
-        run: |
-          tar -czf frontend-build.tgz -C frontend/build .
-
-      # 上传两个工件供后续 deploy 使用
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            backend.tgz
-            frontend-build.tgz
-
-  deploy:
-    name: Deploy to EC2
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifacts
-
-      # 把 tgz 传到服务器（~/deploy）
-      - name: Upload to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          source: |
-            backend.tgz
-            frontend-build.tgz
-          target: ~/deploy
-
-      # 在 EC2 上解压、安装依赖、写 .env、重载 PM2、更新前端到 /var/www/html
-      - name: SSH deploy script
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
-          script_stop: true
-          script: |
-            set -e
-
-            # 目录准备
-            mkdir -p ~/deploy ~/app
-            cd ~/deploy
-
-            # 解压后端与前端
-            rm -rf ~/app/backend ~/frontend-build
-            mkdir -p ~/app/backend ~/frontend-build
-            tar -xzf backend.tgz -C ~/app/backend
-            tar -xzf frontend-build.tgz -C ~/frontend-build
-
-            # 写 .env 到 backend
-            cd ~/app/backend
-            cat > .env <<'EOF'
-            MONGO_URI=${{ secrets.MONGO_URI }}
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            PORT=${{ secrets.PORT }}
-            EOF
-
-            # 安装后端依赖（生产依赖）
-            npm ci --omit=dev
-
-            # 用 PM2 重载/启动
-            if pm2 describe backend >/dev/null 2>&1; then
-              pm2 reload backend
-            else
-              pm2 start server.js --name backend
-            fi
-            pm2 save
-
-            # 部署前端到 Nginx 根目录
-            sudo mkdir -p /var/www/html
-            sudo rm -rf /var/www/html/*
-            sudo cp -r ~/frontend-build/* /var/www/html/
-
-            # 可选：重载 Nginx（如果需要）
-            if command -v nginx >/dev/null 2>&1; then
-              sudo nginx -t && sudo systemctl reload nginx || true
-            fi
-
-            echo "Deploy finished."
-
+    # 启动 Backend
+    - name: Start backend with PM2
+      run: |
+        cd backend
+        pm2 start server.js --name backend || true
 
     # 重启 PM2（可选）
-      - run: pm2 start all
-      - run: pm2 restart all || true
+    - run: pm2 restart all || true
