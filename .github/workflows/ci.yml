@@ -1,4 +1,5 @@
-name: CI/CD
+
+name: Backend Ci
 
 on:
   push:
@@ -8,6 +9,7 @@ concurrency:
   group: cicd-${{ github.ref }}
   cancel-in-progress: true
 
+
 jobs:
   build:
     name: Build & Test
@@ -15,7 +17,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22]
+        node-version: [22] # Test on Node.js v22
 
     steps:
       - name: Checkout
@@ -82,6 +84,7 @@ jobs:
     needs: build
 
     steps:
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
