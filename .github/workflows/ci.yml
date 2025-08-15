@@ -1,10 +1,8 @@
 name: Backend CI
-
 on:
   push:
     branches:
-      - main  # Trigger CI on pushes to the main branch
-
+      - main
 jobs:
   test:
     name: Run Tests
@@ -12,74 +10,58 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22] # Test on multiple Node.js versions
+        node-version: [22]
 
     environment: MONGO_URI
 
     steps:
+
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Set up Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: ${{ matrix.node-version}}
 
-    # 打印环境变量（调试用，可删）
     - name: Print Env Secret
-      env:
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PORT: ${{ secrets.PORT }}
-      run: | 
-        echo "MONGO_URI is: $MONGO_URI"
-        echo "JWT_SECRET is: $JWT_SECRET"
-        echo "PORT is: $PORT"
+      env: # Define environment variables for this step
+        MONGO_URI: ${{ secrets.MONGO_URI }} # MongoDB connection string
+        JWT_SECRET: ${{ secrets.JWT_SECRET }} # JWT authentication secret
+        PORT: ${{ secrets.PORT }} # Application port
+      run: | # Run multiple shell commands
+        echo "Secret 1 is: $MONGO_URI" # Print MongoDB URI
+        echo "Secret 2 is: $JWT_SECRET" # Print JWT Secre
+        echo "Secret 3 is: $PORT" # Print Application Port
 
-    # 停止已有 PM2 进程（忽略失败）
     - run: pm2 stop all
-
-    # 安装 Backend 依赖
     - name: Install Backend Dependencies
-      working-directory: ./backend
-      run: | 
-        npm install --global yarn
-        yarn --version
-        yarn install
-
-    # 安装 Frontend 依赖并构建
+      working-directory: ./backend # Navigate to backend folder
+      run: | # Run multiple commands
+        npm install --global yarn # Install Yarn globally
+        yarn --version # Verify Yarn installation
+        yarn install # Install backend dependencies using Yarn
     - name: Install Frontend Dependencies
-      working-directory: ./frontend
-      run: |
-        df-h
-        sudo rm -rf./build
-        yarn install
-        yarn run build
-
-    # 创建 .env 文件
-    - run: |
-       cd ./backend
-       touch.env
-       echo "${{secrets.PROD}}">.env
-
-    # 运行 Backend 测试
+      working-directory: ./frontend # Navigate to frontend folder
+      run: | # Run multiple commands
+        df -h # Show disk space usage
+        sudo rm -rf ./build # Remove existing build directory
+        yarn install # Install frontend dependencies
+        yarn run build # Build the frontend application
+    
     - name: Run Backend Tests
-      env:
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PORT: ${{ secrets.PORT }}
-      working-directory: ./backend
-      run: npm test
+      env: # Define environment variables for this step
+        MONGO_URI: ${{ secrets.MONGO_URI }} # MongoDB connection string
+        JWT_SECRET: ${{ secrets.JWT_SECRET }} # JWT authentication secret
+        PORT: ${{ secrets.PORT }} # Application port
+      working-directory: ./backend # Navigate to backend folder
+      run: npm test # Run backend tests
 
     - run: npm ci
+    - run: |
+        cd ./backend # Navigate to backend folder
+        touch .env # Create an empty .env file
+        echo "${{ secrets.PROD }}" > .env
 
-    # 启动 Backend
-    - name: Start backend with PM2
-      run: |
-        cd backend
-        pm2 start server.js --name backend || true
-
-    # 重启 PM2（可选）
     - run: pm2 start all
-    - run: pm2 restart all || true
+    - run: pm2 restart all
