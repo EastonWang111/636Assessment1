@@ -30,11 +30,13 @@ Project Function Detail:
 
 All the account can change the profile. When making changes in the profile interface, it will ensure that the username, email, etc. are entered correctly. For the user account, they can voting and see the result. For the admin account, they can create, delete, close vote. In the create vote page, admin can write title name, write vote description, create option, add option. When the option voting options more than 2, admin can delete option. The user management interface has not been completed yet, so for now, you can only use the pre-created administrator account. When creating a user, the default role of the account is "user".
 
-The update of the voting options has not been completed yet.
 The Task code has been retained but will not be applied on the website.
 
 Admin can create , delete and close vote
 User
+
+Public IP：
+3.107.91.117
 
 Account example:
 
@@ -50,5 +52,3 @@ Email: user@example.com
 
 Password: user123
 
-
-test
