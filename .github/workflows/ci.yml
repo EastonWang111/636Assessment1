@@ -12,43 +12,44 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [22] # Test on multiple Node.js versions
+        node-version: [22] # Test on Node.js v22
 
     environment: MONGO_URI
 
     steps:
+    # 1. 检出代码
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Set up Node.js
+    # 2. 设置 Node.js
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
 
-    # 打印环境变量（调试用，可删）
-    - name: Print Env Secret
-      env:
-        MONGO_URI: ${{ secrets.MONGO_URI }}
-        JWT_SECRET: ${{ secrets.JWT_SECRET }}
-        PORT: ${{ secrets.PORT }}
-      run: | 
-        echo "MONGO_URI is: $MONGO_URI"
-        echo "JWT_SECRET is: $JWT_SECRET"
-        echo "PORT is: $PORT"
-
-    # 停止已有 PM2 进程（忽略失败）
-    - name: Run pm2 stop all
+    # 3. 停止已有 PM2 进程（忽略失败）
+    - name: Stop PM2
       run: pm2 stop all || true
 
-    # 安装 Backend 依赖
+    # 4. 创建 .env 文件（先清空，覆盖写入）
+    - name: Create .env file
+      working-directory: ./backend
+      run: |
+        rm -f .env
+        echo "MONGO_URI=${{ secrets.MONGO_URI }}" > .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "PORT=${{ secrets.PORT }}" >> .env
+        echo "✅ .env created successfully"
+        cat .env
+
+    # 5. 安装 Backend 依赖
     - name: Install Backend Dependencies
       working-directory: ./backend
-      run: | 
+      run: |
         npm install --global yarn
         yarn install
 
-    # 安装 Frontend 依赖并构建
+    # 6. 安装 Frontend 依赖并构建
     - name: Install Frontend Dependencies
       working-directory: ./frontend
       run: |
@@ -56,15 +57,7 @@ jobs:
         yarn install
         yarn run build
 
-    # 创建 .env 文件
-    - name: Create .env file
-      working-directory: ./backend
-      run: |
-        echo "MONGO_URI=${{ secrets.MONGO_URI }}" >> .env
-        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-        echo "PORT=${{ secrets.PORT }}" >> .env
-
-    # 运行 Backend 测试
+    # 7. 运行 Backend 测试
     - name: Run Backend Tests
       env:
         MONGO_URI: ${{ secrets.MONGO_URI }}
@@ -73,11 +66,12 @@ jobs:
       working-directory: ./backend
       run: npm test
 
-    # 启动 Backend
+    # 8. 启动 Backend（指定 cwd 确保加载 .env）
     - name: Start backend with PM2
       run: |
-        cd backend
-        pm2 start server.js --name backend || true
+        pm2 delete backend || true
+        pm2 start server.js --name backend --cwd ./backend
+        pm2 save
 
-    # 重启 PM2（可选）
+    # 9. 重启 PM2（可选）
     - run: pm2 restart all || true
