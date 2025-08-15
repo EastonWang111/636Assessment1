@@ -39,7 +39,7 @@ jobs:
         echo "MONGO_URI=${{ secrets.MONGO_URI }}" > .env
         echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
         echo "PORT=${{ secrets.PORT }}" >> .env
-        echo "✅ .env created successfully"
+        echo ".env created successfully"
         cat .env
 
     # 5. 安装 Backend 依赖
