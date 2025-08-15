@@ -33,7 +33,7 @@ All the account can change the profile. When making changes in the profile inter
 The Task code has been retained but will not be applied on the website.
 
 Admin can create , delete and close vote
-User
+User can voting and view the result
 
 Public IP：
 3.107.91.117
