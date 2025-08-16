@@ -21,7 +21,7 @@ const Votes = () => {
             return;
         }
         try {
-            const response = await axiosInstance.get('/api/votes', {
+            const response = await axiosInstance.get('/votes', {
                 headers: { Authorization: `Bearer ${authUser.token}` }
             });
             setVotes(response.data);
@@ -37,7 +37,7 @@ const Votes = () => {
             return;
         }
         try {
-            const response = await axiosInstance.get('/api/auth/profile', {
+            const response = await axiosInstance.get('/auth/profile', {
                 headers: { Authorization: `Bearer ${authUser.token}` }
             });
             setUser(response.data);
@@ -62,7 +62,7 @@ const Votes = () => {
                 return;
             }
 
-            await axiosInstance.post('/api/votes', {
+            await axiosInstance.post('/votes', {
                 ...newVote,
                 options: filteredOptions
             }, {
@@ -80,7 +80,7 @@ const Votes = () => {
 
     const handleVote = async (voteId, optionIndex) => {
         try {
-            await axiosInstance.post(`/api/votes/${voteId}/cast`, {
+            await axiosInstance.post(`/votes/${voteId}/cast`, {
                 optionIndex
             }, {
                 headers: { Authorization: `Bearer ${authUser.token}` }
@@ -94,7 +94,7 @@ const Votes = () => {
 
     const handleCloseVote = async (voteId) => {
         try {
-            await axiosInstance.patch(`/api/votes/${voteId}/close`, {}, {
+            await axiosInstance.patch(`/votes/${voteId}/close`, {}, {
                 headers: { Authorization: `Bearer ${authUser.token}` }
             });
             fetchVotes();
@@ -108,7 +108,7 @@ const Votes = () => {
         if (window.confirm('Are you sure you want to delete this vote? This action cannot be undone and will permanently delete the vote and all its data.')) {
             try {
                 setLoading(true);
-                await axiosInstance.delete(`/api/votes/${voteId}`, {
+                await axiosInstance.delete(`/votes/${voteId}`, {
                     headers: { Authorization: `Bearer ${authUser.token}` }
                 });
                 

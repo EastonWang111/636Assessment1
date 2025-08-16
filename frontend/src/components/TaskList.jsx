@@ -6,7 +6,7 @@ const TaskList = ({ tasks, setTasks, setEditingTask }) => {
 
   const handleDelete = async (taskId) => {
     try {
-      await axiosInstance.delete(`/api/tasks/${taskId}`, {
+      await axiosInstance.delete(`/tasks/${taskId}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
       setTasks(tasks.filter((task) => task._id !== taskId));
