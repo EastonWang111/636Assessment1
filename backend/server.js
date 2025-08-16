@@ -11,7 +11,6 @@ const app = express();
 const allowed = [
   'http://52.64.199.195',   // 你的公网 IP 上的前端
   'http://localhost:3000',  // 本地开发
-  // 'https://你的域名.com', // 有域名时可加
 ];
 const corsOptions = {
   origin(origin, cb) {
@@ -30,6 +29,9 @@ app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/votes', require('./routes/voteRoutes'));
+
+app.get('/api', (_req, res) => res.json({ ok: true }));
+app.get('/api/healthz', (_req, res) => res.json({ ok: true, time: new Date().toISOString() }));
 
 // ==== 启动 ====
 if (require.main === module) {
