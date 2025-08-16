@@ -1,31 +1,44 @@
-
-// server.js 第一行（所有 import/require 之前）
+// server.js（替换你的内容）
 require('dotenv').config();
 
 const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
-dotenv.config();
-
-
 const app = express();
 
-app.use(cors());
+// ==== CORS：允许从公网 IP / 本地开发访问 ====
+const allowed = [
+  'http://52.64.199.195',   // 你的公网 IP 上的前端
+  'http://localhost:3000',  // 本地开发
+  // 'https://你的域名.com', // 有域名时可加
+];
+const corsOptions = {
+  origin(origin, cb) {
+    if (!origin) return cb(null, true);           // 允许 curl/移动端等无 Origin
+    cb(null, allowed.includes(origin));
+  },
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: false, // 使用 Bearer Token 保持 false；若改用 Cookie 再设为 true 并收紧 origin
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // 处理预检
+
+// ==== 常规中间件与路由 ====
 app.use(express.json());
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/votes', require('./routes/voteRoutes'));
 
-// Export the app object for testing
+// ==== 启动 ====
 if (require.main === module) {
-    connectDB();
-    // If the file is run directly, start the server
-    const PORT = process.env.PORT || 5001;
-    app.listen(PORT,'0.0.0.0',() => console.log(`Server running on port ${PORT}`));
-  }
+  connectDB();
+  const PORT = process.env.PORT || 5001;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
-
-module.exports = app
+module.exports = app;
 
