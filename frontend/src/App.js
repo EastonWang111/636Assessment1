@@ -19,9 +19,8 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/votes" element={<Votes />} />
-        <Route path="/" element={
-          user ? <Navigate to="/tasks" replace /> : <Navigate to="/login" replace />
-        } />
+        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/" element={<Votes />} />
       </Routes>
     </Router>
   );
