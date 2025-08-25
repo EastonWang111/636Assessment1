@@ -9,7 +9,7 @@ const app = express();
 
 // ==== CORS：允许从公网 IP / 本地开发访问 ====
 const allowed = [
-  'http://54.253.235.11',   // 你的公网 IP 上的前端
+  'http://16.176.159.212',   // 你的公网 IP 上的前端
   'http://localhost:3000',  // 本地开发
 ];
 const corsOptions = {
