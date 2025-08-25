@@ -13,6 +13,8 @@ const createVote = async (req, res) => {
 
         const vote = new Vote({
             title,
+
+            
             description,
             options: options.map(option => ({ text: option, votes: 0 })),
             createdBy: req.user.id
